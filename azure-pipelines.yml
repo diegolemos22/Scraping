@@ -1,7 +1,7 @@
 
 # Azure Pipelines para rodar scraping com Selenium + Firefox (Windows)
 # - Instala Python 3.x
-# - Instala Firefox e Geckodriver (via Chocolatey)
+# - Instala Firefox e Geckodriver (via Winget)
 # - Instala dependências Python (selenium, pandas, openpyxl)
 # - Força HEADLESS=True e reconfigura OUT_DIR para artefatos do build
 # - Executa o script e publica planilhas como artefatos
@@ -15,9 +15,6 @@ pool:
 variables:
   # Ajuste este caminho se o nome do seu script for diferente
   scriptPath: 'scrap_iob_alertas_extracao.py'
-  # Estas variáveis devem ser definidas como "secret" no Pipeline (UI do DevOps)
-  IOB_EMAIL: '$(IOB_EMAIL)'
-  IOB_SENHA: '$(IOB_SENHA)'
 
 steps:
 - checkout: self
@@ -29,16 +26,10 @@ steps:
   displayName: 'Selecionar Python 3.x'
 
 - powershell: |
-    Set-ExecutionPolicy Bypass -Scope Process -Force
-    if (!(Get-Command choco -ErrorAction SilentlyContinue)) {
-      Write-Host "Instalando Chocolatey..."
-      Set-ExecutionPolicy Bypass -Scope Process -Force
-      [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
-      iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-    }
-    choco install -y firefox
-    choco install -y geckodriver
-  displayName: 'Instalar Firefox e Geckodriver (Chocolatey)'
+    Write-Host "Instalando Firefox e Geckodriver via Winget..."
+    winget install -e --id Mozilla.Firefox
+    winget install -e --id Mozilla.GeckoDriver
+  displayName: 'Instalar Firefox e Geckodriver (Winget)'
 
 - script: |
     python -m pip install --upgrade pip
@@ -60,8 +51,8 @@ steps:
     $content = $content -replace '(?ms)HEADLESS\s*=\s*False', 'HEADLESS = True'
 
     # Redirecionar saída para artefatos do pipeline
-    $newOut = "OUT_DIR = r""$(Build.ArtifactStagingDirectory)\IOB"""
-    $content = $content -replace '(?ms)OUT_DIR\s*=\s*r""[^""]+""', $newOut
+    $newOut = "OUT_DIR = r\"$(Build.ArtifactStagingDirectory)\IOB\""
+    $content = $content -replace '(?ms)OUT_DIR\s*=\s*r\"[^\"]+\"', $newOut
 
     Set-Content $src $content -Encoding UTF8
     Write-Host "Código ajustado para HEADLESS=True e OUT_DIR=$(Build.ArtifactStagingDirectory)\IOB"
@@ -81,4 +72,3 @@ steps:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)\IOB'
     ArtifactName: 'IOB-Excel'
     publishLocation: 'Container'
-
