@@ -946,8 +946,7 @@ def save_to_excel_like_old(items: List[Dict[str, Any]]) -> None:
         SMTP_PORT = 25  # SMTP sem SSL
         FROM_ADDR = "servicos.contabeis@vale.com"
         FROM_NAME = "Serviços Contábeis (Robô IOB)"
-        TO_ADDR = "diego.r.lemos@vale.com"
-        #"bianca.castro@vale.com, carolina.romanelli.souza@vale.com, joao.los@vale.com"
+        TO_ADDR = "bianca.castro@vale.com, carolina.romanelli.souza@vale.com, joao.los@vale.com"
         BCC_ADDR = "diego.r.lemos@vale.com"
         send_mail_with_attachment(
             smtp_server=SMTP_SERVER,
