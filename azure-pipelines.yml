@@ -13,8 +13,8 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  # Ajuste este caminho se o nome do seu script for diferente
-  scriptPath: 'scrap_iob_alertas_extracao.py'
+  # Nome correto do script no repositório
+  scriptPath: 'SCRAP_DOC_IOB_TAX.py'
 
 steps:
 - checkout: self
@@ -25,7 +25,7 @@ steps:
     addToPath: true
   displayName: 'Selecionar Python 3.x'
 
-# Instalar Firefox e Geckodriver via Chocolatey (corrigido)
+# Instalar Firefox e Geckodriver via Chocolatey
 - powershell: |
     Set-ExecutionPolicy Bypass -Scope Process -Force
     if (!(Get-Command choco -ErrorAction SilentlyContinue)) {
@@ -42,9 +42,7 @@ steps:
     pip install selenium pandas openpyxl
   displayName: 'Instalar dependências Python'
 
-# Patch no código para rodar no agente:
-# - HEADLESS = True
-# - OUT_DIR -> $(Build.ArtifactStagingDirectory)\IOB
+# Ajustar parâmetros do script para CI
 - powershell: |
     $src = "$(Build.SourcesDirectory)\$(scriptPath)"
     if (!(Test-Path $src)) {
@@ -53,12 +51,16 @@ steps:
     }
     $content = Get-Content $src -Raw
 
-    # Forçar headless
-    $content = $content -replace '(?ms)HEADLESS\s*=\s*False', 'HEADLESS = True'
+    # Forçar headless (se existir)
+    if ($content -match 'HEADLESS\s*=\s*False') {
+      $content = $content -replace '(?ms)HEADLESS\s*=\s*False', 'HEADLESS = True'
+    }
 
-    # Redirecionar saída para artefatos do pipeline
-    $newOut = "OUT_DIR = r\"$(Build.ArtifactStagingDirectory)\IOB\""
-    $content = $content -replace '(?ms)OUT_DIR\s*=\s*r\"[^\"]+\"', $newOut
+    # Redirecionar saída para artefatos (se existir)
+    if ($content -match 'OUT_DIR\s*=') {
+      $newOut = "OUT_DIR = r\"$(Build.ArtifactStagingDirectory)\IOB\""
+      $content = $content -replace '(?ms)OUT_DIR\s*=\s*r\"[^\"]+\"', $newOut
+    }
 
     Set-Content $src $content -Encoding UTF8
     Write-Host "Código ajustado para HEADLESS=True e OUT_DIR=$(Build.ArtifactStagingDirectory)\IOB"
