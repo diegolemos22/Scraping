@@ -1,18 +1,84 @@
 
+# Azure Pipelines para rodar scraping com Selenium + Firefox (Windows)
+# - Instala Python 3.x
+# - Instala Firefox e Geckodriver (via Chocolatey)
+# - Instala dependências Python (selenium, pandas, openpyxl)
+# - Força HEADLESS=True e reconfigura OUT_DIR para artefatos do build
+# - Executa o script e publica planilhas como artefatos
+
 trigger:
 - main
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: 'windows-latest'
+
+variables:
+  # Ajuste este caminho se o nome do seu script for diferente
+  scriptPath: 'scrap_iob_alertas_extracao.py'
+  # Estas variáveis devem ser definidas como "secret" no Pipeline (UI do DevOps)
+  IOB_EMAIL: '$(IOB_EMAIL)'
+  IOB_SENHA: '$(IOB_SENHA)'
 
 steps:
+- checkout: self
+
 - task: UsePythonVersion@0
   inputs:
     versionSpec: '3.x'
     addToPath: true
+  displayName: 'Selecionar Python 3.x'
+
+- powershell: |
+    Set-ExecutionPolicy Bypass -Scope Process -Force
+    if (!(Get-Command choco -ErrorAction SilentlyContinue)) {
+      Write-Host "Instalando Chocolatey..."
+      Set-ExecutionPolicy Bypass -Scope Process -Force
+      [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+      iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+    }
+    choco install -y firefox
+    choco install -y geckodriver
+  displayName: 'Instalar Firefox e Geckodriver (Chocolatey)'
 
 - script: |
     python -m pip install --upgrade pip
-    pip install -r requirements.txt
-    python main.py
-  displayName: 'Instalar dependências e executar script'
+    pip install selenium pandas openpyxl
+  displayName: 'Instalar dependências Python'
+
+# Patch no código para rodar no agente:
+# - HEADLESS = True
+# - OUT_DIR -> $(Build.ArtifactStagingDirectory)\IOB
+- powershell: |
+    $src = "$(Build.SourcesDirectory)\$(scriptPath)"
+    if (!(Test-Path $src)) {
+      Write-Error "Script não encontrado: $src. Ajuste a variável 'scriptPath'."
+      exit 1
+    }
+    $content = Get-Content $src -Raw
+
+    # Forçar headless
+    $content = $content -replace '(?ms)HEADLESS\s*=\s*False', 'HEADLESS = True'
+
+    # Redirecionar saída para artefatos do pipeline
+    $newOut = "OUT_DIR = r""$(Build.ArtifactStagingDirectory)\IOB"""
+    $content = $content -replace '(?ms)OUT_DIR\s*=\s*r""[^""]+""', $newOut
+
+    Set-Content $src $content -Encoding UTF8
+    Write-Host "Código ajustado para HEADLESS=True e OUT_DIR=$(Build.ArtifactStagingDirectory)\IOB"
+  displayName: 'Ajustar parâmetros do script para CI'
+
+# Executar script com variáveis de ambiente (evita prompt por usuário/senha)
+- powershell: |
+    $env:IOB_EMAIL = "$(IOB_EMAIL)"
+    $env:IOB_SENHA = "$(IOB_SENHA)"
+    python "$(Build.SourcesDirectory)\$(scriptPath)"
+  displayName: 'Executar scraping (Python)'
+  failOnStderr: false
+
+# Publicar os arquivos Excel gerados como artefatos
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)\IOB'
+    ArtifactName: 'IOB-Excel'
+    publishLocation: 'Container'
+
