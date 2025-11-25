@@ -25,7 +25,7 @@ steps:
     addToPath: true
   displayName: 'Selecionar Python 3.x'
 
-# Instalar Firefox e Geckodriver via Chocolatey (não pede confirmação)
+# Instalar Firefox e Geckodriver via Chocolatey (corrigido)
 - powershell: |
     Set-ExecutionPolicy Bypass -Scope Process -Force
     if (!(Get-Command choco -ErrorAction SilentlyContinue)) {
@@ -34,7 +34,7 @@ steps:
       iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
     }
     choco install -y firefox
-    choco install -y geckodriver
+    choco install -y selenium-gecko-driver
   displayName: 'Instalar Firefox e Geckodriver (Chocolatey)'
 
 - script: |
