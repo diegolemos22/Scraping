@@ -1,7 +1,7 @@
 
 # Azure Pipelines para rodar scraping com Selenium + Firefox (Windows)
 # - Instala Python 3.x
-# - Instala Firefox e Geckodriver (via Winget)
+# - Instala Firefox e Geckodriver (via Chocolatey)
 # - Instala dependências Python (selenium, pandas, openpyxl)
 # - Força HEADLESS=True e reconfigura OUT_DIR para artefatos do build
 # - Executa o script e publica planilhas como artefatos
@@ -25,11 +25,17 @@ steps:
     addToPath: true
   displayName: 'Selecionar Python 3.x'
 
+# Instalar Firefox e Geckodriver via Chocolatey (não pede confirmação)
 - powershell: |
-    Write-Host "Instalando Firefox e Geckodriver via Winget..."
-    winget install -e --id Mozilla.Firefox
-    winget install -e --id Mozilla.GeckoDriver
-  displayName: 'Instalar Firefox e Geckodriver (Winget)'
+    Set-ExecutionPolicy Bypass -Scope Process -Force
+    if (!(Get-Command choco -ErrorAction SilentlyContinue)) {
+      Write-Host "Instalando Chocolatey..."
+      [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+      iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+    }
+    choco install -y firefox
+    choco install -y geckodriver
+  displayName: 'Instalar Firefox e Geckodriver (Chocolatey)'
 
 - script: |
     python -m pip install --upgrade pip
