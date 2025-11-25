@@ -1,4 +1,4 @@
-# 🕵️‍♂️ Web Scraping IOB Alertas
+# 🕵️‍♂️ Web Scraping IOB Alertas Municipais
 
 Este projeto automatiza a extração de **atos normativos** do portal **IOB Online**, consolidando os dados em planilhas Excel e enviando por e-mail após deduplicação.
 
