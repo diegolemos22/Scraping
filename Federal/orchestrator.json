@@ -1,0 +1,42 @@
+
+{
+  "sleep_between_steps_seconds": 8,
+  "default_timeout_minutes": 40,
+  "default_retries": 1,
+  "env_files": [".env", ".ENV"],
+  "steps": [
+    {
+      "name": "BPE - MFE Orientacoes",
+      "path": "1_BPE_MFE_ORIENTACOES_FIRE_FOX.py",
+      "args": ["--headless"],
+      "timeout_minutes": 25,
+      "retries": 1,
+      "continue_on_error": false
+    },
+    {
+      "name": "Checkpoint Orientacoes",
+      "path": "3_CHECKPOINT_ORIENTACOES_FIRE_FOX.py",
+      "args": [],
+      "headless": false,
+      "timeout_minutes": 20,
+      "retries": 1,
+      "continue_on_error": true
+    },
+    {
+      "name": "IOB Orientacoes (Federal)",
+      "path": "4_IOB_ORIENTACOES_FIRE_FOX.py",
+      "args": ["--headless"],
+      "timeout_minutes": 35,
+      "retries": 1,
+      "continue_on_error": false
+    },
+    {
+      "name": "IOB Docs (Municipal Tax)",
+      "path": "06_IOB_MUNICIPAL",
+      "args": ["--headless"],
+      "timeout_minutes": 25,
+      "retries": 1,
+      "continue_on_error": true
+    }
+  ]
+}
