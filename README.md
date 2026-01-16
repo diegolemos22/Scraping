@@ -23,7 +23,7 @@ WebScraping/
 ├── orchestrator.json           # Manifesto com a lista dos robôs e configurações
 │
 ├── 1_BPE_MFE_ORIENTACOES.py    # Scraper SVRS – BPE/MDF-e
-├── 2_SPED_FIRE_FOX.py          # Scraper SPED (Destaques)
+├── 2_SPED_FIRE.py              # Scraper SPED (Destaques)
 ├── 3_CHECKPOINT_ORIENTACOES.py # Scraper IOB – Estadual
 ├── 4_IOB_ORIENTACOES.py        # Scraper IOB – Federal
 ├── 5_CTE_ORIENTACOES.py        # Scraper Portal CT-e
